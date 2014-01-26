@@ -1,5 +1,7 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,7 +26,7 @@ public class NBTrain {
 	
 	public static void main(String[] args) {
 		
-		String inputPath = args[0];
+		
 		
 		//vector of dictionaries: one hashmap per class
 		Vector<HashMap<String,Integer>> vectorOfDics= new Vector<HashMap<String,Integer>>(); 
@@ -38,6 +40,10 @@ public class NBTrain {
 		//dic for current label
 		HashMap<String,Integer> currentDic;
 		
+		//total documents
+		int totalCount = 0;
+		ArrayList<Integer> totalLabelDocs = new ArrayList<Integer>(); 
+		
 		// +--------------------------------------------------------
 		// |     READING AND COUNTING (TRAINING)
 		// |--------------------------------------------------------
@@ -49,8 +55,11 @@ public class NBTrain {
 		//long startTime = System.currentTimeMillis(); 
 		try {
 			
-	        BufferedReader br = new BufferedReader(new FileReader(inputPath));
-			String line = br.readLine(); 
+			//String inputPath = args[0];
+	        //BufferedReader br = new BufferedReader(new FileReader(inputPath));
+	        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+	        String line = br.readLine();
+	        
 			while (line != null) {
 				
 				//read labels and words
@@ -67,13 +76,19 @@ public class NBTrain {
 				
 				//for each label
 				for(String label : filteredLabels){
+					totalCount ++;
 					
 					//if is label was previously unseen
 					if(!classPosition.containsKey(label)){
 						int assignedPos = vectorOfDics.size();
 						classPosition.put(label, assignedPos);
 						vectorOfDics.add(new HashMap<String,Integer>());
+						totalLabelDocs.add(assignedPos,0);
 					}
+					
+					//count of docs per label
+					int labelPos = classPosition.get(label);
+					totalLabelDocs.set(labelPos, totalLabelDocs.get(labelPos) + 1);
 					
 					//get dic for current label
 					currentDic = vectorOfDics.elementAt(classPosition.get(label));
@@ -110,9 +125,12 @@ public class NBTrain {
 		// |  the results to stdout
 		// +--------------------------------------------------------
 			
-		int totalCount = 0;
+		
 		//for each label
-		for(String label : classPosition.keySet()){
+		//for(String label : classPosition.keySet()){
+		for(Entry<String, Integer> e : classPosition.entrySet()){
+			String label = e.getKey();
+			int pos = e.getValue();
 			int labelCount = 0;
 			currentDic = vectorOfDics.elementAt(classPosition.get(label));
 			
@@ -127,7 +145,9 @@ public class NBTrain {
 			//output count of Y=y,W=*
 			System.out.println("Y="+label+",W=*\t"+labelCount);
 			
-			totalCount += labelCount;
+			//output count of Y=y
+			System.out.println("Y="+label+"\t"+totalLabelDocs.get(pos));
+			
 		}
 		//output count of Y=*
 		System.out.println("Y=*\t"+totalCount);
